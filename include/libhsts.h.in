@@ -1,0 +1,99 @@
+/*
+ * Copyright(c) 2018 Tim Ruehsen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * This file is part of libhsts.
+ *
+ * Header file for libhsts library routines
+ */
+
+#ifndef LIBHSTS_HSTS_H
+#define LIBHSTS_HSTS_H
+
+#include <stdio.h>
+#include <time.h>
+
+#define HSTS_VERSION "@LIBHSTS_VERSION@"
+#define HSTS_VERSION_MAJOR @LIBHSTS_VERSION_MAJOR@
+#define HSTS_VERSION_MINOR @LIBHSTS_VERSION_MINOR@
+#define HSTS_VERSION_PATCH @LIBHSTS_VERSION_PATCH@
+#define HSTS_VERSION_NUMBER @LIBHSTS_VERSION_NUMBER@
+
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
+#define HSTS_INCLUDE_SUBDOMAIN (1<<0)
+
+/**
+ * hsts_error_t:
+ * @HSTS_SUCCESS: Successful return.
+ * @HSTS_ERR_INVALID_ARG: Invalid argument.
+ * @HSTS_ERR_NO_MEM: Failed to allocate memory.
+ *
+ * Return codes for HSTS functions.
+ * Negative return codes mean failure.
+ * Positive values are reserved for non-error return codes.
+ */
+typedef enum {
+	HSTS_SUCCESS = 0,
+	HSTS_ERR_INVALID_ARG = -1, /* invalid argument */
+	HSTS_ERR_NO_MEM = -2       /* failed to allocate memory */
+} hsts_error_t;
+
+typedef struct _hsts_st hsts_t;
+
+/* loads HSTS data from file */
+hsts_t *
+	hsts_load_file(const char *fname);
+
+/* loads HSTS data from FILE pointer */
+hsts_t *
+	hsts_load_fp(FILE *fp);
+
+/* unloads HSTS data */
+void
+	hsts_free(hsts_t);
+
+/* get the dataset for a given domain */
+int
+	hsts_is_hsts(const hsts_t *hsts, const char *domain, int flags);
+
+/* get the dataset for a given domain */
+hsts_entry_t
+	hsts_get_entry(const hsts_t *hsts, const char *domain, int flags);
+
+/* returns whether the 'include subdomain' flag is set or not */
+int
+	hsts_include_subdomains(hsts_entry_t entry);
+
+/* returns library version string */
+const char *
+        hsts_get_version(void);
+
+/* checks library version number */
+int
+        hsts_check_version_number(int version);
+
+#ifdef  __cplusplus
+}
+#endif
+
+#endif /* LIBHSTS_LIBHSTS_H */
