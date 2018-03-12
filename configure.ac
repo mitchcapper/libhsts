@@ -139,6 +139,7 @@ AC_ARG_WITH(hsts-distfile,
 AC_CONFIG_FILES([Makefile
                  include/Makefile
                  src/Makefile
+                 tools/Makefile
                  libhsts.pc])
 AC_OUTPUT
 

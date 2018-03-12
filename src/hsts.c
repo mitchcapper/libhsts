@@ -42,44 +42,18 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <time.h>
-#include <errno.h>
-#include <limits.h> /* for UINT_MAX */
-#include <langinfo.h>
-#include <arpa/inet.h>
-#ifdef HAVE_ALLOCA_H
-#	include <alloca.h>
-#endif
 
 #include <libhsts.h>
 
-struct _hsts_st {
-	unsigned char
-		*dafsa;
-	size_t
-		dafsa_size;
-	int
-		nsuffixes;
-	unsigned
-		utf8 : 1; /* 1: data contains UTF-8 + punycode encoded rules */
-};
-
 /**
- * SECTION:libhsts
- * @short_description: Public Suffix List library functions
- * @title: libhsts
- * @stability: Stable
- * @include: libhsts.h
- *
- * [Public Suffix List](https://publicsuffix.org/) library functions.
- *
+ * \file
+ * \brief HSTS library functions
+ * \defgroup hsts HSTS library functions
+ * @{
  */
 
 #define countof(a) (sizeof(a)/sizeof(*(a)))
@@ -98,39 +72,27 @@ struct _hsts_st {
 		utf8 : 1; /* 1: data contains UTF-8 + punycode encoded rules */
 };
 
-static const unsigned char kDafsa[0];
-static time_t _hsts_file_time = 0;
-static int _hsts_nsuffixes = 0;
-static const char _hsts_sha1_checksum[] = "";
-static const char _hsts_filename[] = "";
+struct _hsts_entry_st {
+	int
+		flags;
+};
 
 #ifdef HSTS_DISTFILE
 static const char _hsts_dist_filename[] = HSTS_DISTFILE;
 #else
-static const char _hsts_dist_filename[] = "";
+static const char *_hsts_dist_filename[];
 #endif
-
-static int _isspace_ascii(const char c)
-{
-	return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-}
-
-static int _str_is_ascii(const char *s)
-{
-	while (*s && *((unsigned char *)s) < 128) s++;
-
-	return !*s;
-}
 
 /* prototypes */
 int LookupStringInFixedSet(const unsigned char* graph, size_t length, const char* key, size_t key_length);
 int GetUtfMode(const unsigned char *graph, size_t length);
 
-static int _hsts_is_hsts(const hsts_t *hsts, const char *domain)
+static int _hsts_search(const hsts_t *hsts, const char *domain, int *flags)
 {
 	const char *p, *suffix_label;
 	int suffix_nlabels;
 	int suffix_length;
+	int must_have_include_subdomains;
 
 	/* this function should be called without leading dots, just make sure */
 	if (*domain == '.')
@@ -145,250 +107,207 @@ static int _hsts_is_hsts(const hsts_t *hsts, const char *domain)
 
 	suffix_label = domain;
 	suffix_length = p - suffix_label;
+	must_have_include_subdomains = 0;
 
 	for (;;) {
 		int rc = LookupStringInFixedSet(hsts->dafsa, hsts->dafsa_size, suffix_label, suffix_length);
 		if (rc != -1) {
-			return 1; // entry found
+			if (flags)
+				*flags = rc;
+
+			if (must_have_include_subdomains && !(rc & HSTS_FLAG_INCLUDE_SUBDOMAINS))
+				return -1; /* found a subdomain without 'include_subdomains' flag */
+
+			return 0; // domain found
 		}
 
-		if ((suffix_label = strchr(suffix_label, '.'))) {
-			suffix_label++;
-			suffix_length = strlen(suffix_label);
-			suffix_nlabels--;
-		} else
+		if (!(suffix_label = strchr(suffix_label, '.')))
 			break;
+
+		suffix_label++;
+		suffix_length = strlen(suffix_label);
+		suffix_nlabels--;
+		must_have_include_subdomains = 1;
 	}
 
 suffix_no:
-	return 0;
+	return -1; // didn't find domain
 }
 
 /**
- * hsts_is_hsts:
- * @hsts: HSTS context
- * @domain: Domain string
+ * \param[in] hsts HSTS data object
+ * \param[in] domain Domain input string
+ * \param[in] flags Flags, currently unused
+ * \param[out] entry Return value on success, else untouched
  *
- * This function checks if @domain is a public suffix by the means of the
- * [Mozilla Public Suffix List](https://publicsuffix.org).
+ * This function searches for \p domain in the given \p hsts object (HSTS data for preloading) and
+ * on success returns a data entry in \p entry. \p entry maybe be %NULL to perform a simple check.
  *
- * For cookie domain checking see hsts_is_cookie_domain_acceptable().
+ * International \p domain names have to be in ACE (punycode) format.
+ * Other encodings (e.g. UTF-8) result in incorrect return values.
  *
- * International @domain names have to be either in UTF-8 (lowercase + NFKC) or in ASCII/ACE format (punycode).
- * Other encodings likely result in incorrect return values.
- * Use helper function hsts_str_to_utf8lower() for normalization @domain.
+ * \p hsts is a HSTS object returned by either hsts_load_file() or hsts_load_fp().
  *
- * @hsts is a context returned by either hsts_load_file(), hsts_load_fp() or
- * hsts_builtin().
+ * \return %HSTS_SUCCESS if \p domain is has been found, if not %HSTS_ERR_NOT_FOUND.
+ *   HSTS_ERR_INVALID_ARG is returned if either \p hsts or \p domain was %NULL.
+ *   HSTS_ERR_NO_MEM is returned if a memory allocation failed.
  *
- * Returns: 1 if domain is a public suffix, 0 if not.
- *
- * Since: 0.1
+ * Since: 0.0.1
  */
-int hsts_is_hsts(const hsts_t *hsts, const char *domain, UNUSED int flags)
+int hsts_search(const hsts_t *hsts, const char *domain, LIBHSTS_UNUSED int flags, hsts_entry_t **entry)
 {
 	if (!hsts || !domain)
-		return 1;
+		return HSTS_ERR_INVALID_ARG;
 
-	return _hsts_is_hsts(hsts, domain);
-}
+	if (_hsts_search(hsts, domain, &flags) == 0) {
+		if (entry) {
+			hsts_entry_t *e = calloc(1, sizeof(hsts_entry_t));
 
-/**
- * hsts_load_file:
- * @fname: Name of HSTS file
- *
- * This function loads the public suffixes file named @fname.
- * To free the allocated resources, call hsts_free().
- *
- * The suffixes are expected to be UTF-8 encoded (lowercase + NFKC) if they are international.
- *
- * Returns: Pointer to a HSTS context or %NULL on failure.
- *
- * Since: 0.1
- */
-hsts_t *hsts_load_file(const char *fname)
-{
-	FILE *fp;
-	hsts_t *hsts = NULL;
+			if (!e)
+				return HSTS_ERR_NO_MEM;
 
-	if (!fname)
-		return NULL;
+			e->flags = flags;
+			*entry = e;
+		}
 
-	if ((fp = fopen(fname, "r"))) {
-		hsts = hsts_load_fp(fp);
-		fclose(fp);
+		return HSTS_SUCCESS;
 	}
 
-	return hsts;
+	return HSTS_ERR_NOT_FOUND;
+}
+
+int hsts_has_include_subdomains(hsts_entry_t *entry)
+{
+	if (!entry)
+		return 0;
+
+	return !!(entry->flags & HSTS_FLAG_INCLUDE_SUBDOMAINS);
 }
 
 /**
- * hsts_load_fp:
- * @fp: FILE pointer
+ * \param[in] fname Name of a HSTS data file
+ * \param[out] hsts Returned HSTS data
  *
- * This function loads the public suffixes from a FILE pointer.
- * To free the allocated resources, call hsts_free().
+ * This function loads the HSTS data from a file named \p fname.
+ * On success \p hsts will be initialized, else it will be left untouched.
  *
- * The suffixes are expected to be UTF-8 encoded (lowercase + NFKC) if they are international.
+ * The returned \p hsts object can be used with functions like hsts_get_entry().
+ * When done you have to free the hsts object by calling hsts_free().
  *
- * Returns: Pointer to a HSTS context or %NULL on failure.
+ * @return HSTS_SUCCESS on success, else another hsts_status_t value
  *
- * Since: 0.1
+ * Since: 0.0.1
  */
-hsts_t *hsts_load_fp(FILE *fp)
+hsts_status_t hsts_load_file(const char *fname, hsts_t **hsts)
 {
-	hsts_t *hsts;
-	_hsts_entry_t suffix, *suffixp;
-	char buf[256], *linep, *p;
-	int type = 0, is_dafsa;
-	_hsts_idna_t *idna;
+	FILE *fp;
+	hsts_status_t rc;
+
+	if (!fname)
+		return HSTS_ERR_INVALID_ARG;
+
+	rc = hsts_load_fp(fp = fopen(fname, "r"), hsts);
+
+	if (fp)
+		fclose(fp);
+
+	return rc;
+}
+
+/**
+ * @param[in] fp FILE pointer of a HSTS data file
+ * @param[out] hsts Returned HSTS data
+ *
+ * This function loads the HSTS data from a file named \p fname.
+ * On success \p hsts will be initialized, else it will be left untouched.
+ *
+ * The returned \p hsts object can be used with functions like hsts_get_entry().
+ * When done you have to free the hsts object by calling hsts_free().
+ *
+ * @return HSTS_SUCCESS on success, else another hsts_status_t value
+ *
+ * Since: 0.0.1
+ */
+hsts_status_t hsts_load_fp(FILE *fp, hsts_t **hsts)
+{
+	hsts_t *_hsts;
+	char buf[256], *linep;
+	int version;
+	void *m;
+	size_t size, n, len = 0;
 
 	if (!fp)
-		return NULL;
-
-	if (!(hsts = calloc(1, sizeof(hsts_t))))
-		return NULL;
+		return HSTS_ERR_INVALID_ARG;
 
 	/* read first line to allow ASCII / DAFSA detection */
 	if (!(linep = fgets(buf, sizeof(buf) - 1, fp)))
-		goto fail;
+		return HSTS_ERR_INPUT_FAILURE;
 
-	is_dafsa = strlen(buf) == 16 && !strncmp(buf, ".DAFSA@HSTS_", 11);
+	if (strlen(buf) != 16)
+		return HSTS_ERR_INPUT_TOO_SHORT;
 
-	if (is_dafsa) {
-		void *m;
-		size_t size = 65536, n, len = 0;
-		int version = atoi(buf + 11);
+	if (strncmp(buf, ".DAFSA@HSTS_", 12))
+		return HSTS_ERR_INPUT_FORMAT;
 
-		if (version != 0)
-			goto fail;
+	if ((version = atoi(buf + 12)) != 0)
+		return HSTS_ERR_INPUT_VERSION;
 
-		if (!(hsts->dafsa = malloc(size)))
-			goto fail;
+	if (!(_hsts = calloc(1, sizeof(hsts_t))))
+		return HSTS_ERR_NO_MEM;
 
-		memcpy(hsts->dafsa, buf, len);
-
-		while ((n = fread(hsts->dafsa + len, 1, size - len, fp)) > 0) {
-			len += n;
-			if (len >= size) {
-				if (!(m = realloc(hsts->dafsa, size *= 2)))
-					goto fail;
-				hsts->dafsa = m;
-			}
-		}
-
-		/* release unused memory */
-		if ((m = realloc(hsts->dafsa, len)))
-			hsts->dafsa = m;
-		else if (!len)
-			hsts->dafsa = NULL; /* realloc() just free'd hsts->dafsa */
-
-		hsts->dafsa_size = len;
-		hsts->utf8 = !!GetUtfMode(hsts->dafsa, len);
-
-		return hsts;
+	if (!(_hsts->dafsa = malloc(size = 65536))) {
+		hsts_free(_hsts);
+		return HSTS_ERR_NO_MEM;
 	}
 
-	idna = _hsts_idna_open();
+	memcpy(_hsts->dafsa, buf, len);
 
-	/*
-	 *  as of 02.11.2012, the list at https://publicsuffix.org/list/ contains ~6000 rules and 40 exceptions.
-	 *  as of 19.02.2014, the list at https://publicsuffix.org/list/ contains ~6500 rules and 19 exceptions.
-	 */
-	hsts->suffixes = _vector_alloc(8*1024, _suffix_compare_array);
-	hsts->utf8 = 1; /* we put UTF-8 and punycode rules in the lookup vector */
-
-	do {
-		while (_isspace_ascii(*linep)) linep++; /* ignore leading whitespace */
-		if (!*linep) continue; /* skip empty lines */
-
-		if (*linep == '/' && linep[1] == '/') {
-			if (!type) {
-				if (strstr(linep + 2, "===BEGIN ICANN DOMAINS==="))
-					type = _HSTS_FLAG_ICANN;
-				else if (!type && strstr(linep + 2, "===BEGIN PRIVATE DOMAINS==="))
-					type = _HSTS_FLAG_PRIVATE;
+	while ((n = fread(_hsts->dafsa + len, 1, size - len, fp)) > 0) {
+		len += n;
+		if (len >= size) {
+			if (!(m = realloc(_hsts->dafsa, size *= 2))) {
+				hsts_free(_hsts);
+				return HSTS_ERR_NO_MEM;
 			}
-			else if (type == _HSTS_FLAG_ICANN && strstr(linep + 2, "===END ICANN DOMAINS==="))
-				type = 0;
-			else if (type == _HSTS_FLAG_PRIVATE && strstr(linep + 2, "===END PRIVATE DOMAINS==="))
-				type = 0;
-
-			continue; /* skip comments */
+			_hsts->dafsa = m;
 		}
+	}
 
-		/* parse suffix rule */
-		for (p = linep; *linep && !_isspace_ascii(*linep);) linep++;
-		*linep = 0;
+	/* release unused memory */
+	if ((m = realloc(_hsts->dafsa, len)))
+		_hsts->dafsa = m;
+	else if (!len)
+		_hsts->dafsa = NULL; /* realloc() just free'd hsts->dafsa */
+	/* else we go on with the unshrunk data memory */
 
-		if (*p == '!') {
-			p++;
-			suffix.flags = _HSTS_FLAG_EXCEPTION | type;
-			hsts->nexceptions++;
-		} else if (*p == '*') {
-			if (*++p != '.') {
-				/* fprintf(stderr, _("Unsupported kind of rule (ignored): %s\n"), p - 1); */
-				continue;
-			}
-			p++;
-			/* wildcard *.foo.bar implicitly make foo.bar a public suffix */
-			suffix.flags = _HSTS_FLAG_WILDCARD | _HSTS_FLAG_PLAIN | type;
-			hsts->nwildcards++;
-			hsts->nsuffixes++;
-		} else {
-			suffix.flags = _HSTS_FLAG_PLAIN | type;
-			hsts->nsuffixes++;
-		}
+	_hsts->dafsa_size = len;
+	_hsts->utf8 = !!GetUtfMode(_hsts->dafsa, len);
 
-		if (_suffix_init(&suffix, p, linep - p) == 0) {
-			int index;
+	if (hsts)
+		*hsts = _hsts;
 
-			if ((index = _vector_find(hsts->suffixes, &suffix)) >= 0) {
-				/* Found existing entry:
-				 * Combination of exception and plain rule is ambiguous
-				 * !foo.bar
-				 * foo.bar
-				 *
-				 * Allowed:
-				 * !foo.bar + *.foo.bar
-				 * foo.bar + *.foo.bar
-				 *
-				 * We do not check here, let's do it later.
-				 */
-
-				suffixp = _vector_get(hsts->suffixes, index);
-				suffixp->flags |= suffix.flags;
-			} else {
-				/* New entry */
-				suffixp = _vector_get(hsts->suffixes, _vector_add(hsts->suffixes, &suffix));
-			}
-
-			if (suffixp) {
-				suffixp->label = suffixp->label_buf; /* set label to changed address */
-				_add_punycode_if_needed(idna, hsts->suffixes, suffixp);
-			}
-		}
-	} while ((linep = fgets(buf, sizeof(buf), fp)));
-
-	_vector_sort(hsts->suffixes);
-
-	_hsts_idna_close(idna);
-
-	return hsts;
-
-fail:
-	hsts_free(hsts);
-	return NULL;
+	return HSTS_SUCCESS;
 }
 
 /**
- * hsts_free:
- * @hsts: HSTS context pointer
+ * \param[in] entry HSTS entry to be freed
  *
- * This function frees the the HSTS context that has been retrieved via
+ * This function frees the the HSTS entry that has been retrieved via hsts_search().
+ *
+ * Since: 0.0.1
+ */
+void hsts_free_entry(hsts_entry_t *entry)
+{
+	free(entry);
+}
+
+/**
+ * \param[in] hsts HSTS data pointer to be freed
+ *
+ * This function frees the the HSTS data object that has been retrieved via
  * hsts_load_fp() or hsts_load_file().
  *
- * Since: 0.1
+ * Since: 0.0.1
  */
 void hsts_free(hsts_t *hsts)
 {
@@ -399,16 +318,14 @@ void hsts_free(hsts_t *hsts)
 }
 
 /**
- * hsts_dist_filename:
- *
  * This function returns the file name of the distribution/system HSTS data file.
  * This file will be considered by hsts_latest().
  *
  * Return the filename that is set by ./configure --with-hsts-distfile, or an empty string.
  *
- * Returns: String containing a HSTS file name or an empty string.
+ * \return String containing a HSTS file name or an empty string.
  *
- * Since: 0.16
+ * Since: 0.0.1
  */
 const char *hsts_dist_filename(void)
 {
@@ -416,39 +333,28 @@ const char *hsts_dist_filename(void)
 }
 
 /**
- * hsts_get_version:
+ * Get the libhsts version.
  *
- * Get libhsts version.
+ * \return String containing version of libhsts.
  *
- * Returns: String containing version of libhsts.
- *
- * Since: 0.2.5
+ * Since: 0.0.1
  **/
 const char *hsts_get_version(void)
 {
-#ifdef WITH_LIBICU
-	return PACKAGE_VERSION " (+libicu/" U_ICU_VERSION ")";
-#elif defined(WITH_LIBIDN2)
-	return PACKAGE_VERSION " (+libidn2/" IDN2_VERSION ")";
-#elif defined(WITH_LIBIDN)
-	return PACKAGE_VERSION " (+libidn/" STRINGPREP_VERSION ")";
-#else
-	return PACKAGE_VERSION " (no IDNA support)";
-#endif
+	return PACKAGE_VERSION;
 }
 
 /**
- * hsts_check_version_number:
- * @version: Version number (hex) to check against.
+ * \param[in] version Version number (hex) to check against
  *
  * Check the given version number is at minimum the current library version number.
  * The version number must be a hexadecimal number like 0x000a01 (V0.10.1).
  *
- * Returns: Returns the library version number if the given version number is at least
+ * \return Returns the library version number if the given version number is at least
  * the version of the library, else return 0; If the argument is 0, the function returns
  * the library version number without performing a check.
  *
- * Since: 0.11.0
+ * Since: 0.0.1
  **/
 int hsts_check_version_number(int version)
 {
@@ -467,3 +373,5 @@ int hsts_check_version_number(int version)
 
 	return HSTS_VERSION_NUMBER;
 }
+
+/** @} */

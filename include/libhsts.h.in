@@ -40,13 +40,18 @@
 extern "C" {
 #endif
 
-#define HSTS_INCLUDE_SUBDOMAIN (1<<0)
+#define HSTS_FLAG_INCLUDE_SUBDOMAINS (1<<0)
 
 /**
  * hsts_error_t:
  * @HSTS_SUCCESS: Successful return.
  * @HSTS_ERR_INVALID_ARG: Invalid argument.
  * @HSTS_ERR_NO_MEM: Failed to allocate memory.
+ * @HSTS_ERR_INPUT_FAILURE: Failed to read any input data.
+ * @HSTS_ERR_INPUT_TOO_SHORT: Not enough input data available.
+ * @HSTS_ERR_INPUT_FORMAT: Input data format is unknown (no HSTS DAFSA format).
+ * @HSTS_ERR_INPUT_VERSION: Input data (DAFSA) version is wrong/unknown.
+ * @HSTS_ERR_NOT_FOUND: Domain could not be found.
  *
  * Return codes for HSTS functions.
  * Negative return codes mean failure.
@@ -54,43 +59,53 @@ extern "C" {
  */
 typedef enum {
 	HSTS_SUCCESS = 0,
-	HSTS_ERR_INVALID_ARG = -1, /* invalid argument */
-	HSTS_ERR_NO_MEM = -2       /* failed to allocate memory */
-} hsts_error_t;
+	HSTS_ERR_INVALID_ARG = -1,     /* Invalid argument. */
+	HSTS_ERR_NO_MEM = -2,          /* Failed to allocate memory. */
+   HSTS_ERR_INPUT_FAILURE = -3,   /* Failed to read any input data. */
+   HSTS_ERR_INPUT_TOO_SHORT = -4, /* Not enough input data available. */
+   HSTS_ERR_INPUT_FORMAT = -5,    /* Input data format is unknown (no HSTS DAFSA format). */
+   HSTS_ERR_INPUT_VERSION = -6,   /* Input data (DAFSA) version is wrong/unknown. */
+   HSTS_ERR_NOT_FOUND = -7,       /* Domain could not be found. */
+} hsts_status_t;
 
 typedef struct _hsts_st hsts_t;
+typedef struct _hsts_entry_st hsts_entry_t;
 
 /* loads HSTS data from file */
-hsts_t *
-	hsts_load_file(const char *fname);
+hsts_status_t
+	hsts_load_file(const char *fname, hsts_t **hsts);
 
 /* loads HSTS data from FILE pointer */
-hsts_t *
-	hsts_load_fp(FILE *fp);
+hsts_status_t
+	hsts_load_fp(FILE *fp, hsts_t **hsts);
 
-/* unloads HSTS data */
+/* free HSTS data object */
 void
-	hsts_free(hsts_t);
+	hsts_free(hsts_t *hsts);
 
 /* get the dataset for a given domain */
-int
-	hsts_is_hsts(const hsts_t *hsts, const char *domain, int flags);
+hsts_status_t
+	hsts_search(const hsts_t *hsts, const char *domain, int flags, hsts_entry_t **entry);
 
-/* get the dataset for a given domain */
-hsts_entry_t
-	hsts_get_entry(const hsts_t *hsts, const char *domain, int flags);
+/* free HSTS data object */
+void
+	hsts_free_entry(hsts_entry_t *entry);
 
 /* returns whether the 'include subdomain' flag is set or not */
 int
-	hsts_include_subdomains(hsts_entry_t entry);
+	hsts_has_include_subdomains(hsts_entry_t *entry);
+
+/* returns name of distribution HSTS data file */
+const char *
+	hsts_dist_filename(void);
 
 /* returns library version string */
 const char *
-        hsts_get_version(void);
+	hsts_get_version(void);
 
 /* checks library version number */
 int
-        hsts_check_version_number(int version);
+	hsts_check_version_number(int version);
 
 #ifdef  __cplusplus
 }
