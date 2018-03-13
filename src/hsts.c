@@ -238,7 +238,7 @@ hsts_status_t hsts_load_file(const char *fname, hsts_t **hsts)
 hsts_status_t hsts_load_fp(FILE *fp, hsts_t **hsts)
 {
 	hsts_t *_hsts;
-	char buf[256], *linep;
+	char buf[16];
 	int version;
 	void *m;
 	size_t size, n, len = 0;
@@ -246,12 +246,10 @@ hsts_status_t hsts_load_fp(FILE *fp, hsts_t **hsts)
 	if (!fp)
 		return HSTS_ERR_INVALID_ARG;
 
-	/* read first line to allow ASCII / DAFSA detection */
-	if (!(linep = fgets(buf, sizeof(buf) - 1, fp)))
-		return HSTS_ERR_INPUT_FAILURE;
+	if ((n = fread(buf, 1, sizeof(buf), fp)) < sizeof(buf))
+		return ferror(fp) ? HSTS_ERR_INPUT_FAILURE : HSTS_ERR_INPUT_TOO_SHORT;
 
-	if (strlen(buf) != 16)
-		return HSTS_ERR_INPUT_TOO_SHORT;
+	buf[sizeof(buf) - 1] = 0;
 
 	if (strncmp(buf, ".DAFSA@HSTS_", 12))
 		return HSTS_ERR_INPUT_FORMAT;
@@ -267,11 +265,14 @@ hsts_status_t hsts_load_fp(FILE *fp, hsts_t **hsts)
 		return HSTS_ERR_NO_MEM;
 	}
 
-	memcpy(_hsts->dafsa, buf, len);
-
 	while ((n = fread(_hsts->dafsa + len, 1, size - len, fp)) > 0) {
 		len += n;
 		if (len >= size) {
+			if (size >= 20 * 1024 * 1024) {
+				/* Apply a random max. file size to avoid overflows / DOS attacks */
+				hsts_free(_hsts);
+				return HSTS_ERR_INPUT_TOO_LONG;
+			}
 			if (!(m = realloc(_hsts->dafsa, size *= 2))) {
 				hsts_free(_hsts);
 				return HSTS_ERR_NO_MEM;
