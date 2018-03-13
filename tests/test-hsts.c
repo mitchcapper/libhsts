@@ -62,7 +62,7 @@ static void test_hsts(void)
 		{ "fan.gov", HSTS_SUCCESS, 1 }, /*exists, include_subdomains is TRUE */
 	};
 	unsigned it;
-	int result, ver;
+	int result;
 	hsts_t *hsts;
 
 	if (hsts_load_file(SRCDIR "/hsts.dafsa", &hsts) != HSTS_SUCCESS) {
