@@ -574,8 +574,6 @@ def parse_hsts(infile, utf_mode, codecs):
     hsts[domain] = flags
     nentries += 1;
 
-  print('nentries = %d' % nentries);
-
   return [domain + bytes('%X' % (flags & 0x0F), **codecs) for (domain, flags) in sorted(hsts.items())]
 
 

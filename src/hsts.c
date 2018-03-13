@@ -260,7 +260,7 @@ hsts_status_t hsts_load_fp(FILE *fp, hsts_t **hsts)
 	if (!(_hsts = calloc(1, sizeof(hsts_t))))
 		return HSTS_ERR_NO_MEM;
 
-	if (!(_hsts->dafsa = malloc(size = 65536))) {
+	if (!(_hsts->dafsa = malloc(size = 384 * 1024))) { /* 13.3.2018: the current size is ~340k, avoid reallocs */
 		hsts_free(_hsts);
 		return HSTS_ERR_NO_MEM;
 	}

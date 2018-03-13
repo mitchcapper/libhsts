@@ -167,6 +167,7 @@ AC_CONFIG_FILES([Makefile
                  include/Makefile
                  src/Makefile
                  tools/Makefile
+                 tests/Makefile
                  docs/Makefile
                  docs/libhsts.doxy
                  docs/md2man.sh

@@ -4,7 +4,8 @@ if WITH_DOCS
 SUBDIRS += docs
 endif
 
-#SUBDIRS += fuzz tests
+SUBDIRS += tests
+#SUBDIRS += fuzz
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
@@ -19,10 +20,6 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libhsts.pc
 
 EXTRA_DIST = config.rpath LICENSE
-#dist-hook:
-#	mkdir -p $(distdir)/list/tests
-#	cp -p $(HSTS_FILE) $(distdir)/list
-#	cp -p $(HSTS_TESTFILE) $(distdir)/list/tests
 
 clean-local:
 	rm -rf */*.gc?? */*/*.gc?? libhsts.info lcov
