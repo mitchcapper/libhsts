@@ -28,18 +28,6 @@
 # include <config.h>
 #endif
 
-#if defined(__GNUC__) && defined(__GNUC_MINOR__)
-#       define GCC_VERSION_AT_LEAST(major, minor) ((__GNUC__ > (major)) || (__GNUC__ == (major) && __GNUC_MINOR__ >= (minor)))
-#else
-#       define GCC_VERSION_AT_LEAST(major, minor) 0
-#endif
-
-#if GCC_VERSION_AT_LEAST(2,95)
-#  define LIBHSTS_UNUSED __attribute__ ((unused))
-#else
-#  define LIBHSTS_UNUSED
-#endif
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -49,17 +37,32 @@
 
 #include <libhsts.h>
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+#if defined(__GNUC__) && defined(__GNUC_MINOR__)
+#  define GCC_VERSION_AT_LEAST(major, minor) ((__GNUC__ > (major)) || (__GNUC__ == (major) && __GNUC_MINOR__ >= (minor)))
+#else
+#  define GCC_VERSION_AT_LEAST(major, minor) 0
+#endif
+
+#if GCC_VERSION_AT_LEAST(2,95)
+#  define LIBHSTS_UNUSED __attribute__ ((unused))
+#else
+#  define LIBHSTS_UNUSED
+#endif
+
+/* prototypes */
+int LookupStringInFixedSet(const unsigned char* graph, size_t length, const char* key, size_t key_length);
+int GetUtfMode(const unsigned char *graph, size_t length);
+
+#endif
+
 /**
  * \file
  * \brief HSTS library functions
- * \defgroup hsts HSTS library functions
+ * \defgroup libhsts HSTS library functions
  * @{
  */
-
-#define countof(a) (sizeof(a)/sizeof(*(a)))
-
-#define _HSTS_FLAG_INCLUDE_SUBDIRS (1<<0)
-#define _HSTS_FLAG_PLAIN     (1<<4) /* just used for HSTS syntax checking */
 
 struct _hsts_st {
 	unsigned char
@@ -82,10 +85,6 @@ static const char _hsts_dist_filename[] = HSTS_DISTFILE;
 #else
 static const char *_hsts_dist_filename[];
 #endif
-
-/* prototypes */
-int LookupStringInFixedSet(const unsigned char* graph, size_t length, const char* key, size_t key_length);
-int GetUtfMode(const unsigned char *graph, size_t length);
 
 static int _hsts_search(const hsts_t *hsts, const char *domain, int *flags)
 {
@@ -130,7 +129,6 @@ static int _hsts_search(const hsts_t *hsts, const char *domain, int *flags)
 		must_have_include_subdomains = 1;
 	}
 
-suffix_no:
 	return -1; // didn't find domain
 }
 
@@ -176,7 +174,14 @@ int hsts_search(const hsts_t *hsts, const char *domain, LIBHSTS_UNUSED int flags
 	return HSTS_ERR_NOT_FOUND;
 }
 
-int hsts_has_include_subdomains(hsts_entry_t *entry)
+/**
+ * \param[in] entry The domain entry to check
+ * \return 1 if \p entry has the 'include_subdomain' attribute, 0 if not.
+ *
+ * This function checks if an \p entry returned from hsts_search() has the 'include_subdomain'
+ * attribute or not.
+ */
+int hsts_has_include_subdomains(const hsts_entry_t *entry)
 {
 	if (!entry)
 		return 0;

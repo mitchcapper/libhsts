@@ -31,22 +31,49 @@ AC_CONFIG_FILES([include/libhsts.h])
 #AM_GNU_GETTEXT_VERSION([0.18.1])
 
 #
+# check for doxygen and pandoc
+#
+AC_ARG_ENABLE([doc], AS_HELP_STRING([--disable-doc], [don't generate any documentation]), , [enable_doc=yes])
+if test "$enable_doc" = yes; then
+  AC_CHECK_PROGS([DOXYGEN], [doxygen])
+  AC_CHECK_PROGS([PANDOC], [pandoc])
+
+  if test -n "$DOXYGEN" || test -n "$PANDOC"; then
+    DOCS_INFO="yes (found:"
+    if test -n "$DOXYGEN"; then
+      DOCS_INFO="$DOCS_INFO Doxygen"
+    fi
+    if test -n "$PANDOC"; then
+      DOCS_INFO="$DOCS_INFO Pandoc"
+    fi
+    DOCS_INFO="$DOCS_INFO)"
+  else
+    DOCS_INFO="no (neither Doxygen nor Pandoc found)"
+  fi
+else
+  DOCS_INFO="no (disabled)"
+fi
+AM_CONDITIONAL([WITH_DOCS], [ test -n "$DOXYGEN" && test -n "$PANDOC" ])
+AM_CONDITIONAL([WITH_DOXYGEN], [ test -n "$DOXYGEN" ])
+AM_CONDITIONAL([WITH_PANDOC], [ test -n "$PANDOC" ])
+
+#
 # enable creation of man pages
 #
-enable_man=no
-AC_ARG_ENABLE([man],
-  [AC_HELP_STRING([--enable-man], [generate man pages [default=auto]])],
-  [
-    if test "$enableval" = yes; then
-      enable_man=yes
-      AC_PATH_PROG([XSLTPROC], [xsltproc])
-      AS_IF([test -z "$XSLTPROC"], [
-        AC_MSG_ERROR([xsltproc is required for --enable-man])
-        enable_man="no (xsltproc not found)"
-      ])
-    fi
-  ])
-AM_CONDITIONAL(ENABLE_MAN, test x$enable_man = xyes)
+#enable_man=no
+#AC_ARG_ENABLE([man],
+#  [AC_HELP_STRING([--enable-man], [generate man pages [default=auto]])],
+#  [
+#    if test "$enableval" = yes; then
+#      enable_man=yes
+#      AC_PATH_PROG([XSLTPROC], [xsltproc])
+#      AS_IF([test -z "$XSLTPROC"], [
+#        AC_MSG_ERROR([xsltproc is required for --enable-man])
+#        enable_man="no (xsltproc not found)"
+#      ])
+#    fi
+#  ])
+#AM_CONDITIONAL(ENABLE_MAN, test x$enable_man = xyes)
 
 # src/hsts-make-dafsa needs python 2.7+
 AM_PATH_PYTHON([2.7])
@@ -140,9 +167,13 @@ AC_CONFIG_FILES([Makefile
                  include/Makefile
                  src/Makefile
                  tools/Makefile
+                 docs/Makefile
+                 docs/libhsts.doxy
+                 docs/md2man.sh
                  libhsts.pc])
 AC_OUTPUT
 
+#  Man pages:         $enable_man
 AC_MSG_NOTICE([Summary of build options:
 
   Version:           ${PACKAGE_VERSION}
@@ -152,8 +183,8 @@ AC_MSG_NOTICE([Summary of build options:
   CFlags:            ${CFLAGS} ${CPPFLAGS}
   LDFlags:           ${LDFLAGS}
   Libs:              ${LIBS}
-  PSL Dist File:     ${PSL_DISTFILE}
   Sanitizers:        UBSan $ubsan, ASan $asan, CFI $cfi
-  Man pages:         $enable_man
   Tests:             ${TESTS_INFO}
+  PSL Dist File:     ${PSL_DISTFILE}
+  Documentation:     $DOCS_INFO
 ])

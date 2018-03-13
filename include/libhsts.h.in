@@ -93,7 +93,7 @@ void
 
 /* returns whether the 'include subdomain' flag is set or not */
 int
-	hsts_has_include_subdomains(hsts_entry_t *entry);
+	hsts_has_include_subdomains(const hsts_entry_t *entry);
 
 /* returns name of distribution HSTS data file */
 const char *

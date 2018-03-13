@@ -119,9 +119,8 @@ int main(int argc, const char *const *argv)
 	}
 
 	if (arg >= argv + argc) {
-		char buf[256], *domain, *lower;
+		char buf[256], *domain;
 		size_t len;
-		hsts_status_t rc;
 
 		/* read domains from STDIN */
 		while (fgets(buf, sizeof(buf), stdin)) {

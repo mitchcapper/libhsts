@@ -1,12 +1,9 @@
 SUBDIRS = include src tools
 
-#if ENABLE_GTK_DOC
-#  SUBDIRS += docs/libhsts
-#else
-#if ENABLE_MAN
-#  SUBDIRS += docs/libhsts
-#endif
-#endif
+if WITH_DOCS
+SUBDIRS += docs
+endif
+
 #SUBDIRS += fuzz tests
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}

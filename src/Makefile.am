@@ -6,5 +6,3 @@ libhsts_la_CPPFLAGS = -I$(top_srcdir)/include -DHSTS_DISTFILE=\"$(HSTS_DISTFILE)
 libhsts_la_LDFLAGS = -version-info $(LIBHSTS_SO_VERSION)
 
 EXTRA_DIST = hsts-make-dafsa LICENSE.chromium
-
-dist_man_MANS = hsts-make-dafsa.1
