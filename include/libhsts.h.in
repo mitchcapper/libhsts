@@ -43,29 +43,21 @@ extern "C" {
 #define HSTS_FLAG_INCLUDE_SUBDOMAINS (1<<0)
 
 /**
- * hsts_error_t:
- * @HSTS_SUCCESS: Successful return.
- * @HSTS_ERR_INVALID_ARG: Invalid argument.
- * @HSTS_ERR_NO_MEM: Failed to allocate memory.
- * @HSTS_ERR_INPUT_FAILURE: Failed to read any input data.
- * @HSTS_ERR_INPUT_TOO_SHORT: Not enough input data available.
- * @HSTS_ERR_INPUT_FORMAT: Input data format is unknown (no HSTS DAFSA format).
- * @HSTS_ERR_INPUT_VERSION: Input data (DAFSA) version is wrong/unknown.
- * @HSTS_ERR_NOT_FOUND: Domain could not be found.
+ * \ingroup libhsts
  *
  * Return codes for HSTS functions.
  * Negative return codes mean failure.
  * Positive values are reserved for non-error return codes.
  */
 typedef enum {
-	HSTS_SUCCESS = 0,
-	HSTS_ERR_INVALID_ARG = -1,     /* Invalid argument. */
-	HSTS_ERR_NO_MEM = -2,          /* Failed to allocate memory. */
-   HSTS_ERR_INPUT_FAILURE = -3,   /* Failed to read any input data. */
-   HSTS_ERR_INPUT_TOO_SHORT = -4, /* Not enough input data available. */
-   HSTS_ERR_INPUT_FORMAT = -5,    /* Input data format is unknown (no HSTS DAFSA format). */
-   HSTS_ERR_INPUT_VERSION = -6,   /* Input data (DAFSA) version is wrong/unknown. */
-   HSTS_ERR_NOT_FOUND = -7,       /* Domain could not be found. */
+	HSTS_SUCCESS = 0,              /*!< Success. */
+	HSTS_ERR_INVALID_ARG = -1,     /*!< Invalid argument. */
+	HSTS_ERR_NO_MEM = -2,          /*!< Failed to allocate memory. */
+   HSTS_ERR_INPUT_FAILURE = -3,   /*!< Failed to read any input data. */
+   HSTS_ERR_INPUT_TOO_SHORT = -4, /*!< Not enough input data available. */
+   HSTS_ERR_INPUT_FORMAT = -5,    /*!< Input data format is unknown (no HSTS DAFSA format). */
+   HSTS_ERR_INPUT_VERSION = -6,   /*!< Input data (DAFSA) version is wrong/unknown. */
+   HSTS_ERR_NOT_FOUND = -7,       /*!< Domain could not be found. */
 } hsts_status_t;
 
 typedef struct _hsts_st hsts_t;

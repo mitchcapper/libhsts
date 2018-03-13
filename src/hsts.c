@@ -90,7 +90,7 @@ static int _hsts_search(const hsts_t *hsts, const char *domain, int *flags)
 {
 	const char *p, *suffix_label;
 	int suffix_nlabels;
-	int suffix_length;
+	size_t suffix_length;
 	int must_have_include_subdomains;
 
 	/* this function should be called without leading dots, just make sure */
@@ -105,7 +105,7 @@ static int _hsts_search(const hsts_t *hsts, const char *domain, int *flags)
 	}
 
 	suffix_label = domain;
-	suffix_length = p - suffix_label;
+	suffix_length = (size_t) (p - suffix_label);
 	must_have_include_subdomains = 0;
 
 	for (;;) {
@@ -154,17 +154,19 @@ static int _hsts_search(const hsts_t *hsts, const char *domain, int *flags)
  */
 int hsts_search(const hsts_t *hsts, const char *domain, LIBHSTS_UNUSED int flags, hsts_entry_t **entry)
 {
+	int eflags;
+
 	if (!hsts || !domain)
 		return HSTS_ERR_INVALID_ARG;
 
-	if (_hsts_search(hsts, domain, &flags) == 0) {
+	if (_hsts_search(hsts, domain, &eflags) == 0) {
 		if (entry) {
 			hsts_entry_t *e = calloc(1, sizeof(hsts_entry_t));
 
 			if (!e)
 				return HSTS_ERR_NO_MEM;
 
-			e->flags = flags;
+			e->flags = eflags;
 			*entry = e;
 		}
 
