@@ -82,7 +82,6 @@ int main(int argc, const char *const *argv)
 				hsts_free(hsts);
 				if (hsts_file) {
 					fprintf(stderr, "Dropped data from %s\n", hsts_file);
-					hsts_file = NULL;
 				}
 				if (hsts_load_file(hsts_file = *(++arg), &hsts) != HSTS_SUCCESS) {
 					fprintf(stderr, "Failed to load HSTS data from %s\n\n", hsts_file);
@@ -94,7 +93,7 @@ int main(int argc, const char *const *argv)
 				usage(0, stdout);
 			}
 			else if (!strcmp(*arg, "--version")) {
-				printf("hsts %s (0x%06x)\n", PACKAGE_VERSION, hsts_check_version_number(0));
+				printf("hsts %s (0x%06x)\n", PACKAGE_VERSION, (unsigned) hsts_check_version_number(0));
 				printf("libhsts %s\n", hsts_get_version());
 				printf("\n");
 				printf("Copyright (C) 2018 Tim Ruehsen\n");
