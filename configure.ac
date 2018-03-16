@@ -154,12 +154,10 @@ else
   TESTS_INFO="Valgrind testing not enabled"
 fi
 
-# Check for distribution-wide PSL file
+# Check for distribution-wide HSTS file
 AC_ARG_WITH(hsts-distfile,
   AC_HELP_STRING([--with-hsts-distfile=[PATH]], [path to distribution-wide HSTS file]),
   HSTS_DISTFILE=$withval AC_SUBST(HSTS_DISTFILE))
-
-#AC_CHECK_FUNCS([strndup clock_gettime])
 
 # Override the template file name of the generated .pc file, so that there
 # is no need to rename the template file when the API version changes.
@@ -186,6 +184,6 @@ AC_MSG_NOTICE([Summary of build options:
   Libs:              ${LIBS}
   Sanitizers:        UBSan $ubsan, ASan $asan, CFI $cfi
   Tests:             ${TESTS_INFO}
-  PSL Dist File:     ${PSL_DISTFILE}
+  HSTS Dist File:    ${HSTS_DISTFILE}
   Documentation:     $DOCS_INFO
 ])

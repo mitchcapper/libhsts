@@ -11,7 +11,7 @@ check_PROGRAMS = $(HSTS_TESTS)
 TESTS_ENVIRONMENT = TESTS_VALGRIND="@VALGRIND_ENVIRONMENT@"
 TESTS = $(HSTS_TESTS)
 
-# dafsa.psl and dafsa_ascii.psl must be created before any test is executed
+# dafsa.hsts and dafsa_ascii.hsts must be created before any test is executed
 # check-local target works in parallel to the tests, so the test suite will likely fail
 BUILT_SOURCES = hsts.dafsa hsts_ascii.dafsa
 hsts.dafsa: $(HSTS_FILE)

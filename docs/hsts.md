@@ -34,7 +34,7 @@
 
   Available options are:
 
-## `--load-psl-file <filename>`
+## `--load-hsts-file <filename>`
 
   Load HSTS data from `filename`.
   
