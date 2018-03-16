@@ -139,7 +139,10 @@ static int _hsts_search(const hsts_t *hsts, const char *domain, int *flags)
  * \param[out] entry Return value on success, else untouched
  *
  * This function searches for \p domain in the given \p hsts object (HSTS data for preloading) and
- * on success returns a data entry in \p entry. \p entry maybe be %NULL to perform a simple check.
+ * on success returns a data entry in \p entry. If \p domain is a subdomain of a list entry that has the
+ * 'include-subdomains' flag set, the function also succeeds.
+ *
+ * \p entry maybe be %NULL to perform a simple check.
  *
  * International \p domain names have to be in ACE (punycode) format.
  * Other encodings (e.g. UTF-8) result in incorrect return values.
