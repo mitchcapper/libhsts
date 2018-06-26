@@ -43,27 +43,32 @@ static void usage(int err, FILE* f)
 	fprintf(f, "  --version                    show library version information\n");
 	fprintf(f, "  --load-hsts-file <filename>  load HSTS data from file (DAFSA format)\n");
 	fprintf(f, "  --include-subdomains         check if given domains have the 'include_subdomains' flag\n");
+	fprintf(f, "  -b,  --batch                 don't print leading domain\n");
 	fprintf(f, "\n");
 
 	exit(err);
 }
 
+static int batch_mode;
+
 static void check_and_print(const hsts_t *hsts, const char *domain, int mode)
 {
 	hsts_entry_t *e;
+	int res = 0;
 
-	if (hsts_search(hsts, domain, 0, &e) != HSTS_SUCCESS) {
-		printf("%s: 0\n", domain);
-		return ;
+	if (hsts_search(hsts, domain, 0, &e) == HSTS_SUCCESS) {
+		if (mode == 1)
+			res = 1;
+		else if (mode == 2)
+			res = hsts_has_include_subdomains(e);
+
+		hsts_free_entry(e);
 	}
 
-	if (mode == 1) {
-		printf("%s: 1\n", domain);
-	} else if (mode == 2) {
-		printf("%s: %d\n", domain, (int) hsts_has_include_subdomains(e));
-	}
-
-	hsts_free_entry(e);
+	if (batch_mode)
+		printf("%d\n", res);
+	else
+		printf("%s: %d\n", domain, res);
 }
 
 int main(int argc, const char *const *argv)
@@ -75,7 +80,7 @@ int main(int argc, const char *const *argv)
 	hsts_load_file(hsts_dist_filename(), &hsts);
 
 	for (arg = argv + 1; arg < argv + argc; arg++) {
-		if (!strncmp(*arg, "--", 2)) {
+		if (**arg == '-') {
 			if (!strcmp(*arg, "--include-subdomains"))
 				mode = 2;
 			else if (!strcmp(*arg, "--load-hsts-file") && arg < argv + argc - 1) {
@@ -87,6 +92,9 @@ int main(int argc, const char *const *argv)
 					fprintf(stderr, "Failed to load HSTS data from %s\n\n", hsts_file);
 					hsts_file = NULL;
 				}
+			}
+			else if (!strcmp(*arg, "--batch") || !strcmp(*arg, "-b")) {
+				batch_mode = 1;
 			}
 			else if (!strcmp(*arg, "--help")) {
 				fprintf(stdout, "`hsts' explores a HSTS preload list\n\n");

@@ -44,6 +44,11 @@
 
   Check whether the given domains have the `include_subdomains` attribute or not.
 
+## `-b`, `--batch`
+
+  Suppress printing of leading domain name (might ease scripting).
+
+
 # <a name="See also"/>See also
 
    https://www.chromium.org/hsts/
