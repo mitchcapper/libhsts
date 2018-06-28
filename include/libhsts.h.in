@@ -36,6 +36,18 @@
 #define HSTS_VERSION_PATCH @LIBHSTS_VERSION_PATCH@
 #define HSTS_VERSION_NUMBER @LIBHSTS_VERSION_NUMBER@
 
+#ifndef HSTS_API
+#if defined BUILDING_HSTS && HAVE_VISIBILITY
+#  define HSTS_API __attribute__ ((__visibility__("default")))
+#elif defined BUILDING_HSTS && defined _MSC_VER && !defined HSTS_STATIC
+#  define HSTS_API __declspec(dllexport)
+#elif defined _MSC_VER && !defined HSTS_STATIC
+#  define HSTS_API __declspec(dllimport)
+#else
+#  define HSTS_API
+#endif
+#endif
+
 #ifdef  __cplusplus
 extern "C" {
 #endif
@@ -65,39 +77,39 @@ typedef struct _hsts_st hsts_t;
 typedef struct _hsts_entry_st hsts_entry_t;
 
 /* loads HSTS data from file */
-hsts_status_t
+HSTS_API hsts_status_t
 	hsts_load_file(const char *fname, hsts_t **hsts);
 
 /* loads HSTS data from FILE pointer */
-hsts_status_t
+HSTS_API hsts_status_t
 	hsts_load_fp(FILE *fp, hsts_t **hsts);
 
 /* free HSTS data object */
-void
+HSTS_API void
 	hsts_free(hsts_t *hsts);
 
 /* get the dataset for a given domain */
-hsts_status_t
+HSTS_API hsts_status_t
 	hsts_search(const hsts_t *hsts, const char *domain, int flags, hsts_entry_t **entry);
 
 /* free HSTS data object */
-void
+HSTS_API void
 	hsts_free_entry(hsts_entry_t *entry);
 
 /* returns whether the 'include subdomain' flag is set or not */
-int
+HSTS_API int
 	hsts_has_include_subdomains(const hsts_entry_t *entry);
 
 /* returns name of distribution HSTS data file */
-const char *
+HSTS_API const char *
 	hsts_dist_filename(void);
 
 /* returns library version string */
-const char *
+HSTS_API const char *
 	hsts_get_version(void);
 
 /* checks library version number */
-int
+HSTS_API int
 	hsts_check_version_number(int version);
 
 #ifdef  __cplusplus

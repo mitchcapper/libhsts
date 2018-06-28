@@ -1,6 +1,6 @@
 HSTS_FILE = $(srcdir)/hsts.json
 DEFS = @DEFS@ -DSRCDIR=\"$(srcdir)\" -DHSTS_FILE=\"$(HSTS_FILE)\" -DHSTS_TESTFILE=\"$(HSTS_TESTFILE)\"
-AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
 LDADD = ../src/libhsts.la
 AM_LDFLAGS = -no-install
 
