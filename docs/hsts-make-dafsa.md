@@ -18,7 +18,7 @@
 # <a name="Description"/>Description
 
   `hsts-make-dafsa` produces C/C++ code or an architecture-independent binary object that represents a Deterministic
-  Acyclic Finite State Automaton (DAFSA) from a textual representation of a Public Suffix List.
+  Acyclic Finite State Automaton (DAFSA) from a textual representation of Chromium's HSTS preload list.
   Input and output files must be specified on the command line.
 
   This compact representation enables optimized queries of the list, saving
@@ -52,5 +52,8 @@
 
 # <a name="Copyright"/>Copyright
 
-  `hsts-make-dafsa` was written by Olle Liljenzin as part of the Chromium project and has been modified by Tim Rühsen.
+  `make-dafsa` was written by Olle Liljenzin as part of the Chromium project to create a DAFSA representation of the
+  Public Suffix List. It has been modified by Tim Rühsen as `hsts-make-dafsa` to generate DAFSA from Chromium's
+  HSTS preload list.
+
   The code and its documentation is governed by a BSD-style license.
