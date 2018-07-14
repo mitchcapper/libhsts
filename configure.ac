@@ -31,8 +31,13 @@ AC_CONFIG_FILES([include/libhsts.h])
 #
 # Gettext
 #
-#AM_GNU_GETTEXT([external],[need-ngettext])
-#AM_GNU_GETTEXT_VERSION([0.18.1])
+m4_ifdef([AM_GNU_GETTEXT], [
+  AM_GNU_GETTEXT([external],[need-ngettext])
+])
+m4_ifdef([AM_GNU_GETTEXT_VERSION], [
+#do not indent here
+AM_GNU_GETTEXT_VERSION([0.18.2])
+])
 
 #
 # check for doxygen and pandoc
