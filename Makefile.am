@@ -19,7 +19,7 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libhsts.pc
 
-EXTRA_DIST = config.rpath LICENSE
+EXTRA_DIST = build-aux/config.rpath LICENSE
 
 clean-local:
 	rm -rf */*.gc?? */*/*.gc?? libhsts.info lcov

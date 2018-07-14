@@ -1,5 +1,6 @@
 AC_INIT([libhsts], [0.0.1], [tim.ruehsen@gmx.de], [libhsts], [https://gitlab.com/gnuwget/libhsts])
 AC_PREREQ([2.59])
+AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.10 no-define foreign])
 
 # Generate two configuration headers; one for building the library itself with
