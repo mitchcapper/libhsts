@@ -55,7 +55,7 @@
 
    https://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security
 
-   https://github.com/rockdaboot/libhsts
+   https://gitlab.com/rockdaboot/libhsts
 
 # <a name="Author"/>Author
 
