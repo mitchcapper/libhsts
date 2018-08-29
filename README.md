@@ -1,4 +1,5 @@
-[![Travis-CI Status](https://travis-ci.org/rockdaboot/libhsts.png?branch=master)](https://travis-ci.org/rockdaboot/libhsts)
+[![Build status](https://gitlab.com/rockdaboot/libhsts/badges/master/build.svg)](https://gitlab.com/rockdaboot/libhsts/pipelines)
+[![Coverage status](https://gitlab.com/rockdaboot/libhsts/badges/master/coverage.svg)](https://rockdaboot.gitlab.io/libhsts/coverage)
 
 libhsts - C library to access the HSTS preload list
 ===================================================
@@ -31,11 +32,15 @@ Quick API example
 	int main(void)
 	{
 		const char *domain = "example.com";
+		hsts_t *hsts;
 
-		hsts_t *hsts = hsts_load("hsts.dafsa");
-		if (hsts) {
-			hsts_entry_t e = hsts_get_entry(hsts, "example.com", 0);
-			printf("%s %s in the HSTS preload list\n", domain, e ? "is" : "is not");
+		if (hsts_load_file(SRCDIR "/hsts.dafsa", &hsts) == HSTS_SUCCESS) {
+			hsts_entry_t *e;
+
+			if (hsts_search(hsts, domain, 0, &e) == HSTS_SUCCESS)
+				printf("%s is in the HSTS preload list\n", domain);
+			else
+				printf("Failed to find %s in the HSTS preload list\n", domain);
 		}
 		hsts_free(hsts);
 
