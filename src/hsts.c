@@ -216,7 +216,7 @@ hsts_status_t hsts_load_file(const char *fname, hsts_t **hsts)
 	if (!fname)
 		return HSTS_ERR_INVALID_ARG;
 
-	rc = hsts_load_fp(fp = fopen(fname, "r"), hsts);
+	rc = hsts_load_fp(fp = fopen(fname, "rb"), hsts);
 
 	if (fp)
 		fclose(fp);
