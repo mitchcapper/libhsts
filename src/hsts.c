@@ -296,6 +296,8 @@ hsts_status_t hsts_load_fp(FILE *fp, hsts_t **hsts)
 
 	if (hsts)
 		*hsts = _hsts;
+	else
+		hsts_free(_hsts);
 
 	return HSTS_SUCCESS;
 }
