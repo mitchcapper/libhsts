@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+# just in case...
+unset CC
+
+#PREFIX=i686-w64-mingw32
+PREFIX=x86_64-w64-mingw32
+
+# let mingw compiler be less verbose
+export CFLAGS="-O2 -Wall -Wextra"
+
+# somehow, the GnuTLS build needs a static gcc library. It comes with MinGW, but we have to find it's directory.
+autoreconf -fi
+./configure --build=x86_64-pc-linux-gnu --host=$PREFIX --enable-shared
+make clean
+make -j$(nproc)
+make check -j$(nproc) LOG_COMPILER=wine
