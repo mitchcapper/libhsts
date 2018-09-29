@@ -35,7 +35,23 @@
 
 #include <libhsts.h>
 
-static void usage(int err, FILE* f)
+#if defined(__GNUC__) && defined(__GNUC_MINOR__)
+#  define GCC_VERSION_AT_LEAST(major, minor) ((__GNUC__ > (major)) || (__GNUC__ == (major) && __GNUC_MINOR__ >= (minor)))
+#else
+#  define GCC_VERSION_AT_LEAST(major, minor) 0
+#endif
+
+#if GCC_VERSION_AT_LEAST(2,8) || __SUNPRO_C >= 0x5110
+#  define LIBHSTS_NORETURN __attribute__ ((__noreturn__))
+#elif _MSC_VER >= 1200
+#  define LIBHSTS_NORETURN __declspec (noreturn)
+#elif __STDC_VERSION__ >= 201112
+#  define LIBHSTS_NORETURN _Noreturn
+#else
+#  define LIBHSTS_NORETURN
+#endif
+
+LIBHSTS_NORETURN static void usage(int err, FILE* f)
 {
 	fprintf(f, "Usage: hsts [options] <domains...>\n");
 	fprintf(f, "\n");
