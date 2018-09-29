@@ -1,4 +1,4 @@
-AC_INIT([libhsts], [0.0.1], [tim.ruehsen@gmx.de], [libhsts], [https://gitlab.com/gnuwget/libhsts])
+AC_INIT([libhsts], [0.1.0], [tim.ruehsen@gmx.de], [libhsts], [https://gitlab.com/gnuwget/libhsts])
 AC_PREREQ([2.59])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([1.10 no-define foreign])
