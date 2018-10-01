@@ -24,7 +24,7 @@ hsts_ascii.dafsa: $(HSTS_FILE)
 $(HSTS_FILE):
 	if ! test -f $(HSTS_FILE); then \
 	  wget -O$(HSTS_FILE) https://raw.github.com/chromium/chromium/master/net/http/transport_security_state_static.json && \
-	  sed -i 's/^ *\/\/.*$$//g' $(HSTS_FILE); \
+	  sed 's/^ *\/\/.*$$//g' $(HSTS_FILE) >$(HSTS_FILE).tmp && mv -f $(HSTS_FILE).tmp $(HSTS_FILE); \
 	fi
 
 EXTRA_DIST = $(HSTS_FILE) hsts.dafsa hsts_ascii.dafsa

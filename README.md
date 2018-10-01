@@ -67,9 +67,9 @@ The current HSTS Preload list can be retrieved, prepared and generated with:
 
 	$ wget 'https://raw.github.com/chromium/chromium/master/net/http/transport_security_state_static.json'
 
-	$ sed -i 's/^ *\/\/.*$//g' transport_security_state_static.json
+	$ sed 's/^ *\/\/.*$//g' transport_security_state_static.json >hsts.json
 
-	$ src/hsts-make-dafsa --output-format=binary transport_security_state_static.json hsts.dafsa
+	$ src/hsts-make-dafsa --output-format=binary hsts.json hsts.dafsa
 
 Test the result (example)
 
