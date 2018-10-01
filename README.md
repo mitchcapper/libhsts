@@ -97,6 +97,10 @@ Download project and prepare sources with
 		make
 		make check
 
+If you see errors about AX_CHECK_COMPILE_FLAG during `./configure`,
+make sure you have the autoconf-archive installed.
+
+E.g. on Debian via `apt-get install autoconf-archive`.
 
 Mailing List
 ------------
