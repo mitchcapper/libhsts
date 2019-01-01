@@ -67,7 +67,7 @@ typedef enum {
 	HSTS_ERR_NO_MEM = -2,          /*!< Failed to allocate memory. */
    HSTS_ERR_INPUT_FAILURE = -3,   /*!< Failed to read any input data. */
    HSTS_ERR_INPUT_TOO_SHORT = -4, /*!< Not enough input data available. */
-   HSTS_ERR_INPUT_TOO_LONG = -5,  /*!< Lenght of input data is too large. */
+   HSTS_ERR_INPUT_TOO_LONG = -5,  /*!< Length of input data is too large. */
    HSTS_ERR_INPUT_FORMAT = -6,    /*!< Input data format is unknown (no HSTS DAFSA format). */
    HSTS_ERR_INPUT_VERSION = -7,   /*!< Input data (DAFSA) version is wrong/unknown. */
    HSTS_ERR_NOT_FOUND = -8,       /*!< Domain could not be found. */
