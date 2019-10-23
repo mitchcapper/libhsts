@@ -58,7 +58,7 @@ static void test_hsts(void)
 		{ NULL, HSTS_ERR_INVALID_ARG, 0 },  /* special case */
 		{ "adfhoweirh", HSTS_ERR_NOT_FOUND, 0 }, /* unknown TLD */
 		{ "adfhoweirh.com", HSTS_ERR_NOT_FOUND, 0 }, /* unknown domain */
-		{ "www.tumblr.com", HSTS_SUCCESS, 0 }, /* exists, include_subdomains is FALSE */
+		{ "at.search.yahoo.com", HSTS_SUCCESS, 0 }, /* exists, include_subdomains is FALSE */
 		{ "fan.gov", HSTS_SUCCESS, 1 }, /*exists, include_subdomains is TRUE */
 	};
 	unsigned it;
