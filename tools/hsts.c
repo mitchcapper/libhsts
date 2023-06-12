@@ -27,8 +27,9 @@
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
-
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
